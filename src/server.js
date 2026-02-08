@@ -481,16 +481,15 @@ app.get('/api/admin/report/:year/:month', (req, res) => {
          e.id,
          e.first_name,
          e.last_name,
-         esh.hourly_wage,
-         esh.fixed_salary,
-         esh.salary_type,
+         COALESCE(esh.hourly_wage, e.hourly_wage) as hourly_wage,
+         COALESCE(esh.fixed_salary, e.fixed_salary) as fixed_salary,
+         COALESCE(esh.salary_type, e.salary_type) as salary_type,
          t.date,
          t.start_time,
          t.end_time
        FROM employees e
        LEFT JOIN employee_salary_history esh ON e.id = esh.employee_id AND esh.year = ? AND esh.month = ?
        LEFT JOIN timesheets t ON e.id = t.employee_id AND t.date LIKE ?
-       WHERE esh.id IS NOT NULL
        ORDER BY e.first_name, e.last_name, t.date`,
       [year, month, datePattern],
       (err, rows) => {
@@ -583,16 +582,15 @@ app.get('/api/admin/export/:year/:month', (req, res) => {
          e.id,
          e.first_name,
          e.last_name,
-         esh.hourly_wage,
-         esh.fixed_salary,
-         esh.salary_type,
+         COALESCE(esh.hourly_wage, e.hourly_wage) as hourly_wage,
+         COALESCE(esh.fixed_salary, e.fixed_salary) as fixed_salary,
+         COALESCE(esh.salary_type, e.salary_type) as salary_type,
          t.date,
          t.start_time,
          t.end_time
        FROM employees e
        LEFT JOIN employee_salary_history esh ON e.id = esh.employee_id AND esh.year = ? AND esh.month = ?
        LEFT JOIN timesheets t ON e.id = t.employee_id AND t.date LIKE ?
-       WHERE esh.id IS NOT NULL
        ORDER BY e.first_name, e.last_name, t.date`,
       [year, month, datePattern],
       (err, rows) => {
