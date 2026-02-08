@@ -404,22 +404,28 @@
         // Eintrag für ausgewähltes Datum laden
         async function loadEntryForDate() {
             const dateInput = document.getElementById('workDate').value;
-            if (!selectedEmployeeId || !dateInput) return;
+            if (!selectedEmployeeId || !dateInput) {
+                console.log('Cannot load entry: selectedEmployeeId=', selectedEmployeeId, 'dateInput=', dateInput);
+                return;
+            }
 
             try {
-                const response = await fetch(`/api/timesheet/${selectedEmployeeId}/${dateInput}`);
+                console.log('Loading entry for', selectedEmployeeId, dateInput);
+                const response = await fetch(`/api/timesheet?employee_id=${selectedEmployeeId}&date=${dateInput}`);
                 const entry = await response.json();
+                
+                console.log('Entry response:', entry);
                 
                 if (entry && entry.start_time && entry.end_time) {
                     document.getElementById('startTime').value = entry.start_time;
                     document.getElementById('endTime').value = entry.end_time;
-                    showMessage('Existierende Zeiten geladen ✓', 'success');
+                    showMessage('✓ Bestehende Zeiten geladen', 'success');
                 } else {
                     document.getElementById('startTime').value = '';
                     document.getElementById('endTime').value = '';
                 }
             } catch (error) {
-                console.error('Fehler beim Laden:', error);
+                console.error('Fehler beim Laden der Zeiten:', error);
             }
         }
 

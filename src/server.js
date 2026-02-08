@@ -144,9 +144,13 @@ app.post('/api/timesheet', (req, res) => {
   );
 });
 
-// API: Get entry for specific date
-app.get('/api/timesheet/:employee_id/:date', (req, res) => {
-  const { employee_id, date } = req.params;
+// API: Get entry for specific date (Query parameters)
+app.get('/api/timesheet', (req, res) => {
+  const { employee_id, date } = req.query;
+
+  if (!employee_id || !date) {
+    return res.status(400).json({ error: 'employee_id und date sind erforderlich' });
+  }
 
   db.get(
     'SELECT * FROM timesheets WHERE employee_id = ? AND date = ?',
