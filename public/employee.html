@@ -217,6 +217,63 @@
         .hidden {
             display: none;
         }
+
+        .history-section {
+            margin-top: 30px;
+            padding-top: 30px;
+            border-top: 2px solid #e2e8f0;
+        }
+
+        .history-section h3 {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .history-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 10px;
+        }
+
+        .history-item {
+            background: #f7fafc;
+            padding: 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+        }
+
+        .history-item:hover {
+            border-color: #667eea;
+            background: #edf2f7;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .history-item.selected {
+            border-color: #667eea;
+            background: #e6efff;
+        }
+
+        .history-date {
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .history-weekday {
+            color: #999;
+            font-size: 12px;
+        }
+
+        .history-hours {
+            color: #667eea;
+            font-weight: 600;
+            font-size: 12px;
+            margin-top: 5px;
+        }
     </style>
 </head>
 <body>
@@ -264,6 +321,11 @@
             <button class="btn-save" onclick="saveEntry()">Speichern</button>
 
             <div id="message" class="message"></div>
+
+            <div class="history-section" id="historySection">
+                <h3>📋 Deine Stunden diesen Monat</h3>
+                <div class="history-list" id="historyList"></div>
+            </div>
         </div>
     </div>
 
@@ -294,6 +356,8 @@
             if (selectedEmployeeId) {
                 document.getElementById('timeForm').classList.remove('hidden');
                 updateEmployeeName();
+                loadMonthHistory();
+                loadEntryForDate();
             } else {
                 document.getElementById('timeForm').classList.add('hidden');
             }
@@ -331,8 +395,89 @@
 
         // Listener für Datumsänderung
         document.addEventListener('DOMContentLoaded', () => {
-            document.getElementById('workDate').addEventListener('change', updateWeekday);
+            document.getElementById('workDate').addEventListener('change', () => {
+                updateWeekday();
+                loadEntryForDate();
+            });
         });
+
+        // Eintrag für ausgewähltes Datum laden
+        async function loadEntryForDate() {
+            const dateInput = document.getElementById('workDate').value;
+            if (!selectedEmployeeId || !dateInput) return;
+
+            try {
+                const response = await fetch(`/api/timesheet/${selectedEmployeeId}/${dateInput}`);
+                const entry = await response.json();
+                
+                if (entry && entry.start_time && entry.end_time) {
+                    document.getElementById('startTime').value = entry.start_time;
+                    document.getElementById('endTime').value = entry.end_time;
+                    showMessage('Existierende Zeiten geladen ✓', 'success');
+                } else {
+                    document.getElementById('startTime').value = '';
+                    document.getElementById('endTime').value = '';
+                }
+            } catch (error) {
+                console.error('Fehler beim Laden:', error);
+            }
+        }
+
+        // History-Einträge laden (diesen Monat)
+        async function loadMonthHistory() {
+            if (!selectedEmployeeId) return;
+
+            try {
+                const now = new Date();
+                const year = now.getFullYear();
+                const month = String(now.getMonth() + 1).padStart(2, '0');
+                const datePattern = `${year}-${month}`;
+
+                const response = await fetch('/api/admin/report/' + year + '/' + month);
+                const data = await response.json();
+
+                const historyList = document.getElementById('historyList');
+                historyList.innerHTML = '';
+
+                const employee = data.employees.find(e => e.name === document.getElementById('selectedEmployee').textContent);
+                
+                if (employee && Object.keys(employee.days).length > 0) {
+                    const daysArray = Object.entries(employee.days).sort((a, b) => a[0].localeCompare(b[0]));
+                    
+                    daysArray.forEach(([date, hours]) => {
+                        const weekday = getWeekdayName(date);
+                        const item = document.createElement('div');
+                        item.className = 'history-item';
+                        item.innerHTML = `
+                            <div class="history-date">${date}</div>
+                            <div class="history-weekday">${weekday}</div>
+                            <div class="history-hours">${hours.toFixed(2)}h</div>
+                        `;
+                        item.onclick = () => loadDateFromHistory(date);
+                        historyList.appendChild(item);
+                    });
+                } else {
+                    historyList.innerHTML = '<p style="color: #999; grid-column: 1/-1;">Noch keine Einträge diesen Monat</p>';
+                }
+            } catch (error) {
+                console.error('Fehler beim Laden der Historie:', error);
+            }
+        }
+
+        // Datum aus History laden
+        function loadDateFromHistory(date) {
+            document.getElementById('workDate').value = date;
+            updateWeekday();
+            loadEntryForDate();
+        }
+
+        // Wochentag auslesen (Hilfsfunktion)
+        function getWeekdayName(dateString) {
+            const [year, month, day] = dateString.split('-');
+            const date = new Date(year, month - 1, day);
+            const weekdays = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'];
+            return weekdays[date.getDay()];
+        }
 
         // Start jetzt
         function setStartNow() {

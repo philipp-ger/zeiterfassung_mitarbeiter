@@ -144,6 +144,20 @@ app.post('/api/timesheet', (req, res) => {
   );
 });
 
+// API: Get entry for specific date
+app.get('/api/timesheet/:employee_id/:date', (req, res) => {
+  const { employee_id, date } = req.params;
+
+  db.get(
+    'SELECT * FROM timesheets WHERE employee_id = ? AND date = ?',
+    [employee_id, date],
+    (err, row) => {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json(row || {});
+    }
+  );
+});
+
 // API: Get today's entry
 app.get('/api/timesheet/today/:employee_id', (req, res) => {
   const { employee_id } = req.params;

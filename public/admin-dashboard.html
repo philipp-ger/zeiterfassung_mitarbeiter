@@ -292,6 +292,109 @@
             color: #333;
         }
 
+        .report-employee {
+            background: white;
+            border-bottom: 2px solid #e2e8f0;
+            margin-bottom: 0;
+        }
+
+        .employee-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background: #f7fafc;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin-bottom: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .employee-header:hover {
+            background: #edf2f7;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .employee-header.expanded {
+            border-bottom-left-radius: 0;
+            border-bottom-right-radius: 0;
+        }
+
+        .employee-name-section {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            flex: 1;
+        }
+
+        .employee-name-section .name {
+            font-weight: 600;
+            color: #333;
+            font-size: 16px;
+        }
+
+        .employee-total-hours {
+            color: #667eea;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .employee-toggle-icon {
+            font-size: 20px;
+            transition: transform 0.3s;
+            color: #667eea;
+        }
+
+        .employee-toggle-icon.expanded {
+            transform: rotate(180deg);
+        }
+
+        .employee-details {
+            display: none;
+            padding: 15px;
+            background: white;
+            border-left: 2px solid #667eea;
+            border-right: 1px solid #ddd;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .employee-details.show {
+            display: block;
+        }
+
+        .employee-details.show + .employee-header {
+            border-bottom-left-radius: 0;
+            border-bottom-right-radius: 0;
+        }
+
+        .day-entry {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 14px;
+        }
+
+        .day-entry:last-child {
+            border-bottom: none;
+        }
+
+        .day-date {
+            color: #666;
+        }
+
+        .day-weekday {
+            color: #999;
+            font-size: 12px;
+            margin-left: 5px;
+        }
+
+        .day-hours {
+            color: #667eea;
+            font-weight: 600;
+        }
+
         .employee-links {
             background: white;
             border-radius: 12px;
@@ -486,61 +589,86 @@
                 });
         }
 
+        function getWeekdayName(dateString) {
+            const [year, month, day] = dateString.split('-');
+            const date = new Date(year, month - 1, day);
+            const weekdays = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'];
+            return weekdays[date.getDay()];
+        }
+
         function displayReport(data) {
             const tbody = document.getElementById('tableBody');
-            let html = '';
+            let html = '<table style="width:100%;"><tbody>';
 
-            data.employees.forEach(emp => {
+            data.employees.forEach((emp, index) => {
                 const daysArray = Object.entries(emp.days).sort((a, b) => a[0].localeCompare(b[0]));
+                const uniqueId = `employee-${index}`;
                 
                 if (daysArray.length === 0) {
                     html += `
                         <tr>
-                            <td class="name">${emp.name}</td>
-                            <td colspan="3" style="color: #999;">Keine Einträge</td>
+                            <td colspan="3" style="padding: 15px;">
+                                <div class="employee-header">
+                                    <div class="employee-name-section">
+                                        <span class="name">${emp.name}</span>
+                                        <span class="employee-total-hours">0h</span>
+                                    </div>
+                                </div>
+                                <div style="padding: 10px 15px; color: #999;">Keine Einträge diesen Monat</div>
+                            </td>
                         </tr>
                     `;
                     return;
                 }
 
-                // Erste Reihe mit Name und erster Tag
-                const [firstDate, firstHours] = daysArray[0];
+                // Mitarbeiter-Header mit Accordion
                 html += `
                     <tr>
-                        <td class="name" rowspan="${daysArray.length + 1}">${emp.name}</td>
-                        <td>${firstDate}</td>
-                        <td class="hours">${firstHours.toFixed(2)}h</td>
-                    </tr>
-                `;
-
-                // Weitere Tage
-                for (let i = 1; i < daysArray.length; i++) {
-                    const [date, hours] = daysArray[i];
-                    html += `
-                        <tr>
-                            <td>${date}</td>
-                            <td class="hours">${hours.toFixed(2)}h</td>
-                        </tr>
-                    `;
-                }
-
-                // Summe für diesen Mitarbeiter
-                html += `
-                    <tr style="background: #edf2f7; font-weight: 600;">
-                        <td colspan="1" style="text-align: right;"><strong>Summe ${emp.name}:</strong></td>
-                        <td class="hours"><strong>${emp.totalHours.toFixed(2)}h</strong></td>
+                        <td colspan="3" style="padding: 0;">
+                            <div class="employee-header" onclick="toggleEmployee('${uniqueId}')">
+                                <div class="employee-name-section">
+                                    <span class="name">${emp.name}</span>
+                                    <span class="employee-total-hours">${emp.totalHours.toFixed(2)}h</span>
+                                </div>
+                                <span class="employee-toggle-icon">▼</span>
+                            </div>
+                            <div id="${uniqueId}" class="employee-details">
+                                ${daysArray.map(([date, hours]) => {
+                                    const weekday = getWeekdayName(date);
+                                    return `
+                                        <div class="day-entry">
+                                            <span class="day-date">${date}<span class="day-weekday">(${weekday})</span></span>
+                                            <span class="day-hours">${hours.toFixed(2)}h</span>
+                                        </div>
+                                    `;
+                                }).join('')}
+                            </div>
+                        </td>
                     </tr>
                 `;
             });
 
             html += `
                 <tr class="summary-total">
-                    <td colspan="2"><strong>GESAMTSUMME MONAT:</strong></td>
-                    <td class="hours">${data.totalHours.toFixed(2)}h</td>
+                    <td colspan="3" style="padding: 15px; text-align: center; font-weight: 600;">
+                        GESAMTSUMME MONAT: <span class="hours">${data.totalHours.toFixed(2)}h</span>
+                    </td>
                 </tr>
-            `;
+            </tbody></table>`;
 
             tbody.innerHTML = html;
+        }
+
+        function toggleEmployee(id) {
+            const details = document.getElementById(id);
+            const header = document.querySelector(`[onclick="toggleEmployee('${id}')"]`);
+            const icon = header.querySelector('.employee-toggle-icon');
+            
+            if (details) {
+                details.classList.toggle('show');
+                icon.classList.toggle('expanded');
+                header.classList.toggle('expanded');
+            }
         }
 
         function loadEmployeeLinks() {
