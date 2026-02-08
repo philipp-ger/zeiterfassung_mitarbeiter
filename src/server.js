@@ -368,7 +368,11 @@ app.get('/api/admin/report/:year/:month', (req, res) => {
           const start = new Date(`2000-01-01 ${row.start_time}`);
           const end = new Date(`2000-01-01 ${row.end_time}`);
           const hours = (end - start) / (1000 * 60 * 60);
-          report[row.id].days[row.date] = hours;
+          report[row.id].days[row.date] = {
+            hours: hours,
+            start_time: row.start_time,
+            end_time: row.end_time
+          };
           report[row.id].totalHours += hours;
         }
       });
@@ -442,7 +446,11 @@ app.get('/api/admin/export/:year/:month', (req, res) => {
           const start = new Date(`2000-01-01 ${row.start_time}`);
           const end = new Date(`2000-01-01 ${row.end_time}`);
           const hours = (end - start) / (1000 * 60 * 60);
-          report[row.id].days[row.date] = hours;
+          report[row.id].days[row.date] = {
+            hours: hours,
+            start_time: row.start_time,
+            end_time: row.end_time
+          };
           report[row.id].totalHours += hours;
         }
       });

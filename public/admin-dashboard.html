@@ -641,13 +641,19 @@
                                 <div style="padding: 10px 15px; color: #666; font-size: 13px; border-bottom: 1px solid #eee;">
                                     ${salaryInfo}
                                 </div>
-                                ${daysArray.map(([date, hours]) => {
+                                ${daysArray.map(([date, dayData]) => {
                                     const weekday = getWeekdayName(date);
+                                    const hours = dayData.hours;
+                                    const startTime = dayData.start_time;
+                                    const endTime = dayData.end_time;
                                     const dayWage = emp.salary_type === 'hourly' ? (hours * emp.hourly_wage).toFixed(2) : '-';
                                     return `
                                         <div class="day-entry">
                                             <span class="day-date">${date}<span class="day-weekday">(${weekday})</span></span>
-                                            <span style="color: #666; font-size: 13px;">${hours.toFixed(2)}h ${dayWage !== '-' ? `= ${dayWage}€` : ''}</span>
+                                            <div style="color: #666; font-size: 13px; display: flex; justify-content: space-between; margin-top: 5px;">
+                                                <span>${startTime} - ${endTime} (${hours.toFixed(2)}h)</span>
+                                                ${dayWage !== '-' ? `<span>${dayWage}€</span>` : ''}
+                                            </div>
                                         </div>
                                     `;
                                 }).join('')}
