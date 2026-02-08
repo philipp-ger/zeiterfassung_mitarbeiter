@@ -372,23 +372,43 @@ app.get('/api/admin/report/:year/:month', (req, res) => {
   const monthStr = String(month).padStart(2, '0');
   const datePattern = `${year}-${monthStr}%`;
 
-  db.all(
-    `SELECT 
-       e.id,
-       e.name,
-       COALESCE(esh.hourly_wage, e.hourly_wage) as hourly_wage,
-       COALESCE(esh.fixed_salary, e.fixed_salary) as fixed_salary,
-       COALESCE(esh.salary_type, e.salary_type) as salary_type,
-       t.date,
-       t.start_time,
-       t.end_time
-     FROM employees e
-     LEFT JOIN employee_salary_history esh ON e.id = esh.employee_id AND esh.year = ? AND esh.month = ?
-     LEFT JOIN timesheets t ON e.id = t.employee_id AND t.date LIKE ?
-     ORDER BY e.name, t.date`,
-    [year, month, datePattern],
-    (err, rows) => {
-      if (err) return res.status(500).json({ error: err.message });
+  // Erst: Finde alle Monate mit Timesheets die KEINE Lohnhistorie haben
+  const fillSql = `
+    INSERT OR IGNORE INTO employee_salary_history (employee_id, year, month, hourly_wage, fixed_salary, salary_type)
+    SELECT DISTINCT e.id, ?, ?, e.hourly_wage, e.fixed_salary, e.salary_type
+    FROM employees e
+    WHERE EXISTS (
+      SELECT 1 FROM timesheets t 
+      WHERE t.employee_id = e.id AND t.date LIKE ?
+    )
+    AND NOT EXISTS (
+      SELECT 1 FROM employee_salary_history esh 
+      WHERE esh.employee_id = e.id AND esh.year = ? AND esh.month = ?
+    )
+  `;
+
+  db.run(fillSql, [year, month, datePattern, year, month], (err) => {
+    if (err) console.error('Fehler beim Füllen der Lohnhistorie:', err);
+
+    // Dann: Hole Report mit gefüllter Lohnhistorie
+    db.all(
+      `SELECT 
+         e.id,
+         e.name,
+         esh.hourly_wage,
+         esh.fixed_salary,
+         esh.salary_type,
+         t.date,
+         t.start_time,
+         t.end_time
+       FROM employees e
+       LEFT JOIN employee_salary_history esh ON e.id = esh.employee_id AND esh.year = ? AND esh.month = ?
+       LEFT JOIN timesheets t ON e.id = t.employee_id AND t.date LIKE ?
+       WHERE esh.id IS NOT NULL
+       ORDER BY e.name, t.date`,
+      [year, month, datePattern],
+      (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
 
       // Daten aggregieren
       const report = {};
@@ -441,8 +461,9 @@ app.get('/api/admin/report/:year/:month', (req, res) => {
         totalWageHourly: totalWageHourly,
         totalWageFixed: totalWageFixed
       });
-    }
-  );
+      }
+    );
+  });
 });
 
 // API: Export CSV
@@ -451,23 +472,42 @@ app.get('/api/admin/export/:year/:month', (req, res) => {
   const monthStr = String(month).padStart(2, '0');
   const datePattern = `${year}-${monthStr}%`;
 
-  db.all(
-    `SELECT 
-       e.id,
-       e.name,
-       COALESCE(esh.hourly_wage, e.hourly_wage) as hourly_wage,
-       COALESCE(esh.fixed_salary, e.fixed_salary) as fixed_salary,
-       COALESCE(esh.salary_type, e.salary_type) as salary_type,
-       t.date,
-       t.start_time,
-       t.end_time
-     FROM employees e
-     LEFT JOIN employee_salary_history esh ON e.id = esh.employee_id AND esh.year = ? AND esh.month = ?
-     LEFT JOIN timesheets t ON e.id = t.employee_id AND t.date LIKE ?
-     ORDER BY e.name, t.date`,
-    [year, month, datePattern],
-    (err, rows) => {
-      if (err) return res.status(500).json({ error: err.message });
+  // Erst: Finde alle Monate mit Timesheets die KEINE Lohnhistorie haben
+  const fillSql = `
+    INSERT OR IGNORE INTO employee_salary_history (employee_id, year, month, hourly_wage, fixed_salary, salary_type)
+    SELECT DISTINCT e.id, ?, ?, e.hourly_wage, e.fixed_salary, e.salary_type
+    FROM employees e
+    WHERE EXISTS (
+      SELECT 1 FROM timesheets t 
+      WHERE t.employee_id = e.id AND t.date LIKE ?
+    )
+    AND NOT EXISTS (
+      SELECT 1 FROM employee_salary_history esh 
+      WHERE esh.employee_id = e.id AND esh.year = ? AND esh.month = ?
+    )
+  `;
+
+  db.run(fillSql, [year, month, datePattern, year, month], (err) => {
+    if (err) console.error('Fehler beim Füllen der Lohnhistorie:', err);
+
+    db.all(
+      `SELECT 
+         e.id,
+         e.name,
+         esh.hourly_wage,
+         esh.fixed_salary,
+         esh.salary_type,
+         t.date,
+         t.start_time,
+         t.end_time
+       FROM employees e
+       LEFT JOIN employee_salary_history esh ON e.id = esh.employee_id AND esh.year = ? AND esh.month = ?
+       LEFT JOIN timesheets t ON e.id = t.employee_id AND t.date LIKE ?
+       WHERE esh.id IS NOT NULL
+       ORDER BY e.name, t.date`,
+      [year, month, datePattern],
+      (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
 
       // Aggregiere Daten
       const report = {};
@@ -524,8 +564,9 @@ app.get('/api/admin/export/:year/:month', (req, res) => {
       res.setHeader('Content-Type', 'text/csv');
       res.setHeader('Content-Disposition', `attachment; filename="Zeiterfassung_${year}-${monthStr}.csv"`);
       res.send(csv);
-    }
-  );
+      }
+    );
+  });
 });
 
 // API: Update employee
