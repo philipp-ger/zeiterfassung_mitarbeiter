@@ -255,6 +255,39 @@ app.post('/api/timesheet', (req, res) => {
   );
 });
 
+// API: Update timesheet entry (Admin)
+app.put('/api/admin/timesheet/:employee_id/:date', (req, res) => {
+  const { employee_id, date } = req.params;
+  const { start_time, end_time } = req.body;
+
+  if (!start_time || !end_time) {
+    return res.status(400).json({ error: 'Start- und Endzeit erforderlich' });
+  }
+
+  db.run(
+    'UPDATE timesheets SET start_time = ?, end_time = ? WHERE employee_id = ? AND date = ?',
+    [start_time, end_time, employee_id, date],
+    function(err) {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json({ success: true, message: 'Zeiten aktualisiert!' });
+    }
+  );
+});
+
+// API: Delete timesheet entry (Admin)
+app.delete('/api/admin/timesheet/:employee_id/:date', (req, res) => {
+  const { employee_id, date } = req.params;
+
+  db.run(
+    'DELETE FROM timesheets WHERE employee_id = ? AND date = ?',
+    [employee_id, date],
+    function(err) {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json({ success: true, message: 'Eintrag gelöscht!' });
+    }
+  );
+});
+
 // API: Get entry for specific date (Query parameters)
 app.get('/api/timesheet', (req, res) => {
   const { employee_id, date } = req.query;
