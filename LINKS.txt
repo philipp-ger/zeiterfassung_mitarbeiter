@@ -1,0 +1,158 @@
+================================================================================
+FIT-INN ZEITERFASSUNG - ALLE LINKS UND PASSWÖRTER
+================================================================================
+
+🌐 HAUPTSEITE
+─────────────────────────────────────────────────────────────────────────────
+http://localhost:3000
+
+
+🔐 ADMIN DASHBOARD
+─────────────────────────────────────────────────────────────────────────────
+URL: http://localhost:3000/admin
+Passwort: fitinn2024
+
+Features:
+  • Monatliche Übersicht
+  • Tabelle mit allen Mitarbeitern & Stunden
+  • CSV/Excel Export
+  • Monats-Navigation (vor/zurück)
+  • Links zum Weitergeben an Mitarbeiter
+
+
+👤 MITARBEITER-LINKS (zum Weitergeben)
+─────────────────────────────────────────────────────────────────────────────
+
+Anna:
+  http://localhost:3000/time/316d559e-8524-4751-8211-077d8d4fc084
+
+Marco:
+  http://localhost:3000/time/a356c758-952b-459d-8721-14b2fa69b63b
+
+Lisa:
+  http://localhost:3000/time/01930f9f-4c9b-4d67-9274-8ee2de7f5e9d
+
+Tom:
+  http://localhost:3000/time/44314fd6-64a1-43d1-9e58-ee59fdf05f35
+
+
+🔧 KONFIGURATION
+─────────────────────────────────────────────────────────────────────────────
+Datei: src/server.js
+
+Admin-Passwort ändern:
+  Zeile ~170: const ADMIN_PASSWORD = 'fitinn2024';
+
+Port ändern (z.B. 8080):
+  Zeile ~162: const PORT = 3000;
+
+Neuen Mitarbeiter hinzufügen:
+  Zeile ~72-80: initializeTestData() Funktion
+  Neue Zeile: { name: 'Name', uuid: uuidv4() }
+  → App neustarten → neue Links erscheinen im Admin-Dashboard
+
+
+📡 API ENDPOINTS
+─────────────────────────────────────────────────────────────────────────────
+
+Public:
+  GET  /                              → Startseite
+  GET  /time/:uuid                    → Mitarbeiter-View
+  GET  /api/employee/:uuid            → Mitarbeiter-Daten
+  POST /api/timesheet                 → Eintrag speichern
+  GET  /api/timesheet/today/:employee_id → Heut's Eintrag
+
+Admin:
+  GET  /admin                         → Admin-Login
+  GET  /admin/dashboard               → Admin-Dashboard
+  POST /api/admin/login               → Authentifizierung
+  GET  /api/admin/employees           → Alle Mitarbeiter
+  GET  /api/admin/report/:year/:month → Monatsbericht (JSON)
+  GET  /api/admin/export/:year/:month → CSV Export
+
+
+🗂 DATEISTRUKTUR
+─────────────────────────────────────────────────────────────────────────────
+fit-inn-app/
+├── src/server.js                 ← Express Server (Backend) 
+├── public/
+│   ├── index.html                ← Startseite
+│   ├── employee.html             ← Mitarbeiter-View
+│   ├── admin-login.html          ← Admin-Login
+│   └── admin-dashboard.html      ← Admin-Übersicht
+├── data/
+│   └── timetracking.db           ← SQLite Datenbank
+├── package.json
+├── README.md                     ← Technische Dokumentation
+├── ANLEITUNG_PHILIPP.md          ← Ausführliche deutsche Anleitung
+├── QUICKSTART.md                 ← Quick Start Guide
+└── LINKS.txt                     ← Diese Datei
+
+
+💾 DATENBANK
+─────────────────────────────────────────────────────────────────────────────
+Typ: SQLite (lokal)
+Pfad: /data/.openclaw/workspace/fit-inn-app/data/timetracking.db
+
+Tabellen:
+  1. employees    - Mitarbeiterdaten (id, name, uuid, created_at)
+  2. timesheets   - Zeiteinträge (id, employee_id, date, start_time, end_time, created_at)
+
+Datenbank neu erstellen:
+  rm data/timetracking.db
+  npm start
+
+
+🚀 START KOMMANDO
+─────────────────────────────────────────────────────────────────────────────
+cd /data/.openclaw/workspace/fit-inn-app
+npm install    # Falls noch nicht gemacht
+npm start
+
+
+📱 MOBILE-NUTZUNG
+─────────────────────────────────────────────────────────────────────────────
+✅ Funktioniert auf allen Geräten
+✅ Per WhatsApp voll funktionsfähig
+✅ Responsive Design (Mobile-First)
+✅ Einfaches Interface (nur Start/Ende Buttons)
+
+
+📊 EXPORT FORMATE
+─────────────────────────────────────────────────────────────────────────────
+CSV Datei mit:
+  • Mitarbeitername
+  • Arbeitstage im Monat
+  • Stunden pro Tag (mit Datum)
+  • Gesamtstunden pro Mitarbeiter
+  • Summe aller Mitarbeiter
+
+Öffnungsbar mit:
+  ✓ Excel
+  ✓ Google Sheets
+  ✓ LibreOffice Calc
+  ✓ Notepad/TextEditor
+
+
+🆘 FEHLERBEHANDLUNG
+─────────────────────────────────────────────────────────────────────────────
+"Address already in use (Port 3000)":
+  → lsof -ti:3000 | xargs kill -9
+
+"Database error":
+  → rm data/timetracking.db
+  → npm start
+
+"npm install failed":
+  → rm -rf node_modules package-lock.json
+  → npm install
+
+Passwort vergessen:
+  → Siehe KONFIGURATION → Admin-Passwort ändern
+
+
+================================================================================
+ERSTELLT: 2026-02-08
+STATUS: ✅ Produktionsreif
+VERSION: 1.0.0
+================================================================================

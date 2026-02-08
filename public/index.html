@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fit-Inn Zeiterfassung</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 600px;
+            width: 100%;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .logo {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+
+        .title {
+            font-size: 32px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #999;
+            font-size: 16px;
+        }
+
+        .buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 40px;
+        }
+
+        a {
+            text-decoration: none;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 16px;
+            transition: all 0.3s;
+            color: white;
+            display: block;
+        }
+
+        .btn-employee {
+            background: #48bb78;
+        }
+
+        .btn-employee:hover {
+            background: #38a169;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(72, 187, 120, 0.3);
+        }
+
+        .btn-admin {
+            background: #667eea;
+        }
+
+        .btn-admin:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .info {
+            background: #edf2f7;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 30px;
+            border-left: 4px solid #667eea;
+        }
+
+        .info p {
+            color: #2d3748;
+            margin: 10px 0;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .info strong {
+            color: #667eea;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 30px 20px;
+            }
+
+            .buttons {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">⏱️</div>
+            <div class="title">Fit-Inn Heldenbergen</div>
+            <div class="subtitle">Zeiterfassungssystem</div>
+        </div>
+
+        <div class="buttons">
+            <a href="#" onclick="showNote(); return false;" class="btn-employee">
+                👤 Mitarbeiter-View<br><small style="font-size: 12px;">Persönlicher Link erforderlich</small>
+            </a>
+            <a href="/admin" class="btn-admin">
+                🔐 Admin-Login<br><small style="font-size: 12px;">Dashboard & Übersicht</small>
+            </a>
+        </div>
+
+        <div class="info">
+            <p><strong>ℹ️ Für Mitarbeiter:</strong></p>
+            <p>Nutze deinen persönlichen Link, den du von Philipp erhalten hast. Dieser Link ist speziell für dich!</p>
+            
+            <p style="margin-top: 15px;"><strong>🔐 Für Philipp (Admin):</strong></p>
+            <p>Klick auf "Admin-Login" und nutze dein Passwort um alle Einträge zu sehen und zu exportieren.</p>
+        </div>
+    </div>
+
+    <script>
+        function showNote() {
+            alert('Bitte nutze deinen persönlichen Link, den du von Philipp erhalten hast. Dieser Link sieht z.B. so aus:\n\nhttp://localhost:3000/time/[deine-uuid]');
+        }
+    </script>
+</body>
+</html>

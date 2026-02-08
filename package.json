@@ -1,0 +1,19 @@
+{
+  "name": "fit-inn-timetracking",
+  "version": "1.0.0",
+  "description": "Zeiterfassungs-App für Fit-Inn Heldenbergen",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node src/server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.18.2",
+    "sqlite3": "^5.1.6",
+    "uuid": "^9.0.0",
+    "body-parser": "^1.20.2"
+  }
+}
