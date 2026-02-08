@@ -25,6 +25,23 @@ Eine moderne, mobile-optimierte Web-App zur Zeiterfassung für Fitnessstudio-Mit
 - **Neue Mitarbeiter hinzufügen** direkt im Dashboard
 - **Mitarbeiter löschen** mit Bestätigung
 
+### 📥 Import/Export (NEU!)
+- **Mitarbeiter exportieren:** CSV-Download aller Mitarbeiter mit Kontaktdaten & Gehaltsinformationen
+- **Mitarbeiter importieren:** CSV-Upload für Batch-Operationen
+  - Neue Mitarbeiter werden automatisch erstellt
+  - Bestehende Mitarbeiter (nach Email) werden aktualisiert
+  - Unterstützt Stundenlohn & Festgehalt
+- **Lohnhistorie importieren:** Separate CSV für historische Lohndaten
+
+### 🔀 Sortiermöglichkeiten (NEU!)
+Das Admin-Dashboard kann nach folgenden Kriterien sortiert werden:
+- **Name (A-Z / Z-A)** — Alphabetisch
+- **Stunden (auf-/absteigend)** — Nach geleisteten Stunden
+- **Verdienst (auf-/absteigend)** — Nach Gesamtverdienst im Monat
+- **Stundenlohn (auf-/absteigend)** — Nach Lohnrate pro Stunde
+
+Die Sortierung wird über ein Dropdown-Menü neben der Monatsnavigation gesteuert.
+
 ## 🎨 Design
 
 - **Modern & Minimalistisch:** Gradient-Header mit Purple/Blue Scheme
@@ -190,6 +207,20 @@ GET /api/admin/report/:year/:month
 
 GET /api/admin/export/:year/:month
   → CSV-Export herunterladen
+
+GET /api/admin/export/employees
+  → CSV-Export aller Mitarbeiter (Kontakt & Gehalt)
+  Response: CSV mit ID, Vorname, Nachname, Email, Stundenlohn, Festgehalt, Gehaltstyp
+
+POST /api/admin/import/employees
+  Body: { csvData: "CSV content..." }
+  → Mitarbeiter importieren/aktualisieren
+  Response: { success: true, imported: 5, updated: 2, errors: [...] }
+
+POST /api/admin/import-salary
+  Body: { csvData: "CSV content..." }
+  → Lohnhistorie importieren
+  Response: { success: true, imported: 10, errors: [...] }
 ```
 
 ## 💾 Datenbank
@@ -216,6 +247,7 @@ created_at (DATETIME) - Erstellt am
 
 ## 📊 CSV Export Format
 
+### Zeitbericht (Monat)
 ```csv
 Mitarbeitername,Arbeitstage,Stunden pro Tag,Gesamtstunden
 Anna,10,"2024-02-01: 8.00h; 2024-02-02: 8.50h; ...",82.50
@@ -223,6 +255,16 @@ Marco,8,"2024-02-05: 7.50h; ...",60.00
 
 Gesamtstunden aller Mitarbeiter,,,142.50
 ```
+
+### Mitarbeiter-Export
+```csv
+ID,Vorname,Nachname,Email,Stundenlohn,Festgehalt,Gehaltstyp
+1,"Max","Mustermann","max@example.com","15.00","","hourly"
+2,"Erika","Beispiel","erika@example.com","","2500.00","fixed"
+```
+
+### Import-Format (Mitarbeiter)
+Verwendung des gleichen Formats wie Export oben. Die Email wird zum Identifizieren bestehender Mitarbeiter verwendet.
 
 ## 🔐 Sicherheit
 
@@ -286,6 +328,28 @@ PORT=3001 npm start
 - [ ] Urlaub/Krankheitstage Tracking
 - [ ] SMS-Benachrichtigungen
 - [ ] Statistiken & Charts
+- [ ] Gehalt-/Lohn-Management (pro Mitarbeiter editierbar)
+- [ ] Zeiterfassungs-Berichte als PDF
+
+## 📋 Changelog
+
+### Version 2.2.0 (Februar 2026)
+- ✨ **Mitarbeiter Import/Export:** CSV-basiert, mit Auto-Update bei bestehenden Emails
+- ✨ **8 Sortiermöglichkeiten:** Name, Stunden, Verdienst, Stundenlohn (je auf-/absteigend)
+- 🔧 Refactored Employee Selector zu ID-basiertem Dropdown
+- 📦 Erweiterte Datenbank-Struktur für Lohnhistorie
+
+### Version 2.1.0 (Februar 2026)
+- ✨ Gehalt-/Lohnverwaltung (Stundenlohn vs. Festgehalt)
+- ✨ Lohnhistorie-Import (CSV)
+- 📊 Verdienst-Berechnung im Monatsbericht
+
+### Version 2.0.0 (Februar 2026)
+- 🎉 **Release:** Vollständig funktionales Zeiterfassungs-Dashboard
+- ✨ Accordion-View für Mitarbeiter-Details
+- ✨ Monatliche Navigation & Berichte
+- ✨ CSV-Export für Excel
+- ✨ Admin-Dashboard mit Passwortschutz
 
 ## 📄 Lizenz
 
@@ -293,7 +357,7 @@ Erstellt für Fit-Inn Heldenbergen
 
 ---
 
-**Version:** 2.0.0  
+**Version:** 2.2.0  
 **Letztes Update:** Februar 2026  
 **Status:** ✅ Produktionsreif  
-**Letzter Commit:** Responsive UI mit Tab-Navigation & Toast-Notifications
+**Letzter Commit:** Employee Import/Export + 8 Sortiermöglichkeiten für Dashboard
