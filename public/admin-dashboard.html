@@ -508,8 +508,8 @@
                     <thead>
                         <tr>
                             <th>Mitarbeiter</th>
-                            <th>Datum</th>
-                            <th>Stunden</th>
+                            <th>Gesamtstunden</th>
+                            <th>Gesamtverdienst</th>
                         </tr>
                     </thead>
                     <tbody id="tableBody">
@@ -585,7 +585,7 @@
                 })
                 .catch(err => {
                     document.getElementById('tableBody').innerHTML = 
-                        `<tr><td colspan="4" class="error">Fehler beim Laden der Daten: ${err.message}</td></tr>`;
+                        `<tr><td colspan="3" class="error">Fehler beim Laden der Daten: ${err.message}</td></tr>`;
                 });
         }
 
@@ -611,7 +611,6 @@
                                 <div class="employee-header">
                                     <div class="employee-name-section">
                                         <span class="name">${emp.name}</span>
-                                        <span class="employee-total-hours">0h</span>
                                     </div>
                                 </div>
                                 <div style="padding: 10px 15px; color: #999;">Keine Einträge diesen Monat</div>
@@ -622,6 +621,10 @@
                 }
 
                 // Mitarbeiter-Header mit Accordion
+                const salaryInfo = emp.salary_type === 'hourly' 
+                    ? `${emp.totalHours.toFixed(2)}h × ${emp.hourly_wage.toFixed(2)}€ = <strong>${emp.totalWage.toFixed(2)}€</strong>`
+                    : `Festgehalt: <strong>${emp.totalWage.toFixed(2)}€</strong>`;
+                
                 html += `
                     <tr>
                         <td colspan="3" style="padding: 0;">
@@ -630,15 +633,20 @@
                                     <span class="name">${emp.name}</span>
                                     <span class="employee-total-hours">${emp.totalHours.toFixed(2)}h</span>
                                 </div>
+                                <span style="color: #667eea; font-weight: 600; margin-right: 20px;">${emp.totalWage.toFixed(2)}€</span>
                                 <span class="employee-toggle-icon">▼</span>
                             </div>
                             <div id="${uniqueId}" class="employee-details">
+                                <div style="padding: 10px 15px; color: #666; font-size: 13px; border-bottom: 1px solid #eee;">
+                                    ${salaryInfo}
+                                </div>
                                 ${daysArray.map(([date, hours]) => {
                                     const weekday = getWeekdayName(date);
+                                    const dayWage = emp.salary_type === 'hourly' ? (hours * emp.hourly_wage).toFixed(2) : '-';
                                     return `
                                         <div class="day-entry">
                                             <span class="day-date">${date}<span class="day-weekday">(${weekday})</span></span>
-                                            <span class="day-hours">${hours.toFixed(2)}h</span>
+                                            <span style="color: #666; font-size: 13px;">${hours.toFixed(2)}h ${dayWage !== '-' ? `= ${dayWage}€` : ''}</span>
                                         </div>
                                     `;
                                 }).join('')}
@@ -650,9 +658,9 @@
 
             html += `
                 <tr class="summary-total">
-                    <td colspan="3" style="padding: 15px; text-align: center; font-weight: 600;">
-                        GESAMTSUMME MONAT: <span class="hours">${data.totalHours.toFixed(2)}h</span>
-                    </td>
+                    <td style="padding: 15px; text-align: left; font-weight: 600;">GESAMT MONAT</td>
+                    <td style="padding: 15px; text-align: left; font-weight: 600;"><span class="hours">${data.totalHours.toFixed(2)}h</span></td>
+                    <td style="padding: 15px; text-align: left; font-weight: 600; color: #667eea;"><span class="wage">${data.totalWage.toFixed(2)}€</span></td>
                 </tr>
             </tbody></table>`;
 

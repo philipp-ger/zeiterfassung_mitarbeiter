@@ -337,6 +337,9 @@ app.get('/api/admin/report/:year/:month', (req, res) => {
     `SELECT 
        e.id,
        e.name,
+       e.hourly_wage,
+       e.fixed_salary,
+       e.salary_type,
        t.date,
        t.start_time,
        t.end_time
@@ -353,8 +356,12 @@ app.get('/api/admin/report/:year/:month', (req, res) => {
         if (!report[row.id]) {
           report[row.id] = {
             name: row.name,
+            salary_type: row.salary_type || 'hourly',
+            hourly_wage: row.hourly_wage || 0,
+            fixed_salary: row.fixed_salary || 0,
             days: {},
-            totalHours: 0
+            totalHours: 0,
+            totalWage: 0
           };
         }
         if (row.date && row.start_time && row.end_time) {
@@ -366,14 +373,25 @@ app.get('/api/admin/report/:year/:month', (req, res) => {
         }
       });
 
-      const reportArray = Object.values(report);
+      // Berechne Lohn basierend auf Gehalt-Typ
+      const reportArray = Object.values(report).map(emp => {
+        if (emp.salary_type === 'hourly') {
+          emp.totalWage = emp.totalHours * emp.hourly_wage;
+        } else {
+          emp.totalWage = emp.fixed_salary;
+        }
+        return emp;
+      });
+
       const totalHoursAll = reportArray.reduce((sum, emp) => sum + emp.totalHours, 0);
+      const totalWageAll = reportArray.reduce((sum, emp) => sum + emp.totalWage, 0);
 
       res.json({
         year,
         month: parseInt(month),
         employees: reportArray,
-        totalHours: totalHoursAll
+        totalHours: totalHoursAll,
+        totalWage: totalWageAll
       });
     }
   );
@@ -389,6 +407,9 @@ app.get('/api/admin/export/:year/:month', (req, res) => {
     `SELECT 
        e.id,
        e.name,
+       e.hourly_wage,
+       e.fixed_salary,
+       e.salary_type,
        t.date,
        t.start_time,
        t.end_time
@@ -405,8 +426,12 @@ app.get('/api/admin/export/:year/:month', (req, res) => {
         if (!report[row.id]) {
           report[row.id] = {
             name: row.name,
+            salary_type: row.salary_type || 'hourly',
+            hourly_wage: row.hourly_wage || 0,
+            fixed_salary: row.fixed_salary || 0,
             days: {},
-            totalHours: 0
+            totalHours: 0,
+            totalWage: 0
           };
         }
         if (row.date && row.start_time && row.end_time) {
@@ -418,19 +443,30 @@ app.get('/api/admin/export/:year/:month', (req, res) => {
         }
       });
 
+      // Berechne Lohn
+      const reportArray = Object.values(report).map(emp => {
+        if (emp.salary_type === 'hourly') {
+          emp.totalWage = emp.totalHours * emp.hourly_wage;
+        } else {
+          emp.totalWage = emp.fixed_salary;
+        }
+        return emp;
+      });
+
       // CSV generieren
-      let csv = 'Mitarbeitername,Arbeitstage,Stunden pro Tag,Gesamtstunden\n';
-      const reportArray = Object.values(report);
+      let csv = 'Mitarbeitername,Gehaltstyp,Stundenlohn/Festgehalt,Arbeitstage,Gesamtstunden,Gesamtverdienst\n';
       reportArray.forEach(emp => {
         const workDays = Object.keys(emp.days).length;
-        const hoursPerDays = Object.entries(emp.days)
-          .map(([date, hours]) => `${date}: ${hours.toFixed(2)}h`)
-          .join('; ');
-        csv += `"${emp.name}",${workDays},"${hoursPerDays}",${emp.totalHours.toFixed(2)}\n`;
+        const salaryInfo = emp.salary_type === 'hourly' 
+          ? `${emp.hourly_wage.toFixed(2)}€/h`
+          : `${emp.fixed_salary.toFixed(2)}€`;
+        const salaryType = emp.salary_type === 'hourly' ? 'Stundenlohn' : 'Festgehalt';
+        csv += `"${emp.name}",${salaryType},"${salaryInfo}",${workDays},${emp.totalHours.toFixed(2)},${emp.totalWage.toFixed(2)}€\n`;
       });
 
       const totalHours = reportArray.reduce((sum, emp) => sum + emp.totalHours, 0);
-      csv += `\nGesamtstunden aller Mitarbeiter,,,${totalHours.toFixed(2)}\n`;
+      const totalWage = reportArray.reduce((sum, emp) => sum + emp.totalWage, 0);
+      csv += `\nGesamt,,,${reportArray.length},${totalHours.toFixed(2)},${totalWage.toFixed(2)}€\n`;
 
       res.setHeader('Content-Type', 'text/csv');
       res.setHeader('Content-Disposition', `attachment; filename="Zeiterfassung_${year}-${monthStr}.csv"`);
