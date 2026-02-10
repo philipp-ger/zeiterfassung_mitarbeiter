@@ -138,6 +138,7 @@ function calculateReport(rows, year, month) {
                 first_name: row.first_name,
                 last_name: row.last_name,
                 salary_type: row.salary_type || 'hourly',
+                employment_type: row.employment_type || 'Festangestellter',
                 hourly_wage: row.hourly_wage || 0,
                 fixed_salary: row.fixed_salary || 0,
                 days: {}, // Will store date -> array of entries
@@ -176,6 +177,8 @@ function calculateReport(rows, year, month) {
     const totalWageAll = reportArray.reduce((sum, emp) => sum + emp.totalWage, 0);
     const totalWageHourly = reportArray.filter(emp => emp.salary_type === 'hourly').reduce((sum, emp) => sum + emp.totalWage, 0);
     const totalWageFixed = reportArray.filter(emp => emp.salary_type === 'fixed').reduce((sum, emp) => sum + emp.totalWage, 0);
+    const totalWageMinijob = reportArray.filter(emp => emp.employment_type === 'Minijobber').reduce((sum, emp) => sum + emp.totalWage, 0);
+    const totalWageFest = reportArray.filter(emp => emp.employment_type !== 'Minijobber').reduce((sum, emp) => sum + emp.totalWage, 0);
 
     return {
         year,
@@ -184,7 +187,9 @@ function calculateReport(rows, year, month) {
         totalHours: totalHoursAll,
         totalWage: totalWageAll,
         totalWageHourly: totalWageHourly,
-        totalWageFixed: totalWageFixed
+        totalWageFixed: totalWageFixed,
+        totalWageMinijob: totalWageMinijob,
+        totalWageFest: totalWageFest
     };
 }
 
@@ -216,6 +221,7 @@ router.get('/report/:year/:month', (req, res) => {
          e.id,
          e.first_name,
          e.last_name,
+         e.employment_type,
          COALESCE(esh.hourly_wage, e.hourly_wage) as hourly_wage,
          COALESCE(esh.fixed_salary, e.fixed_salary) as fixed_salary,
          COALESCE(esh.salary_type, e.salary_type) as salary_type,
@@ -247,6 +253,7 @@ router.get('/export/:year/:month', (req, res) => {
        e.id,
        e.first_name,
        e.last_name,
+       e.employment_type,
        COALESCE(esh.hourly_wage, e.hourly_wage) as hourly_wage,
        COALESCE(esh.fixed_salary, e.fixed_salary) as fixed_salary,
        COALESCE(esh.salary_type, e.salary_type) as salary_type,
