@@ -1,0 +1,318 @@
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import Button from '../components/Button';
+import Card from '../components/Card';
+import { format, parseISO, isSameMonth, subMonths, addMonths } from 'date-fns';
+import { de } from 'date-fns/locale';
+
+const EmployeeView = () => {
+    const [employees, setEmployees] = useState([]);
+    const [selectedEmployee, setSelectedEmployee] = useState(null);
+    const [activeTab, setActiveTab] = useState('today');
+    const [workDate, setWorkDate] = useState(new Date().toISOString().split('T')[0]);
+    const [timeEntry, setTimeEntry] = useState({ start_time: '', end_time: '' });
+    const [message, setMessage] = useState(null);
+    const [history, setHistory] = useState([]);
+    const [currentMonth, setCurrentMonth] = useState(new Date());
+
+    // Load employees
+    useEffect(() => {
+        fetch('/api/employees')
+            .then(res => res.json())
+            .then(data => {
+                setEmployees(data);
+            });
+    }, []);
+
+    // Load entry when employee or date changes
+    useEffect(() => {
+        if (!selectedEmployee || !workDate) return;
+
+        fetch(`/api/timesheet?employee_id=${selectedEmployee.id}&date=${workDate}`)
+            .then(res => res.json())
+            .then(data => {
+                setTimeEntry({
+                    start_time: data.start_time || '',
+                    end_time: data.end_time || ''
+                });
+            });
+    }, [selectedEmployee, workDate]);
+
+    // Load history
+    useEffect(() => {
+        if (!selectedEmployee) return;
+        const year = currentMonth.getFullYear();
+        const month = currentMonth.getMonth() + 1;
+
+        fetch(`/api/admin/report/${year}/${month}`)
+            .then(res => res.json())
+            .then(data => {
+                const empData = data.employees.find(e => e.id === selectedEmployee.id);
+                if (empData) {
+                    setHistory(Object.entries(empData.days).map(([date, info]) => ({
+                        date,
+                        ...info
+                    })).sort((a, b) => b.date.localeCompare(a.date)));
+                } else {
+                    setHistory([]);
+                }
+            });
+    }, [selectedEmployee, currentMonth]);
+
+    const handleSave = async () => {
+        if (!selectedEmployee) return showMessage('Bitte Mitarbeiter wählen', 'error');
+        if (!timeEntry.start_time && !timeEntry.end_time) return showMessage('Bitte Zeiten eingeben', 'error');
+
+        try {
+            const res = await fetch('/api/timesheets', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    employee_id: selectedEmployee.id,
+                    date: workDate,
+                    start_time: timeEntry.start_time,
+                    end_time: timeEntry.end_time
+                })
+            });
+            const data = await res.json();
+            if (data.success) {
+                showMessage('✅ Gespeichert!', 'success');
+                // Trigger reload of history/entry by "refreshing" dependency or simple re-fetch
+                // For simplicity, we just let the effect re-run if we changed something tracking it, 
+                // but here we might want to manually re-fetch history.
+                // Re-fetching history:
+                const year = currentMonth.getFullYear();
+                const month = currentMonth.getMonth() + 1;
+                fetch(`/api/admin/report/${year}/${month}`)
+                    .then(r => r.json())
+                    .then(d => {
+                        const empData = d.employees.find(e => e.id === selectedEmployee.id);
+                        if (empData) {
+                            setHistory(Object.entries(empData.days).map(([date, info]) => ({
+                                date,
+                                ...info
+                            })).sort((a, b) => b.date.localeCompare(a.date)));
+                        }
+                    });
+            } else {
+                showMessage('Fehler: ' + data.error, 'error');
+            }
+        } catch (err) {
+            showMessage('Netzwerkfehler', 'error');
+        }
+    };
+
+    const showMessage = (text, type) => {
+        setMessage({ text, type });
+        setTimeout(() => setMessage(null), 3000);
+    };
+
+    const setNow = (field) => {
+        const now = new Date();
+        const time = format(now, 'HH:mm');
+        setTimeEntry(prev => ({ ...prev, [field]: time }));
+    };
+
+    return (
+        <div style={{ maxWidth: '600px', margin: '0 auto', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+            {/* Header */}
+            <div style={{
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                color: 'white',
+                padding: '24px',
+                textAlign: 'center',
+                borderBottomLeftRadius: '20px',
+                borderBottomRightRadius: '20px',
+                boxShadow: '0 4px 15px rgba(0,0,0,0.1)'
+            }}>
+                <div style={{ fontSize: '32px', marginBottom: '8px' }}>⏱️</div>
+                <h1 style={{ fontSize: '20px', fontWeight: 'bold' }}>Fit-Inn Zeiterfassung</h1>
+                <div style={{ opacity: 0.8, fontSize: '13px' }}>Heldenbergen</div>
+            </div>
+
+            {/* Notification */}
+            <AnimatePresence>
+                {message && (
+                    <motion.div
+                        initial={{ opacity: 0, y: -20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        style={{
+                            position: 'fixed',
+                            top: '20px',
+                            left: '50%',
+                            transform: 'translateX(-50%)',
+                            background: message.type === 'success' ? '#48bb78' : '#f56565',
+                            color: 'white',
+                            padding: '12px 24px',
+                            borderRadius: '50px',
+                            boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+                            zIndex: 100,
+                            fontWeight: 'bold',
+                            fontSize: '14px'
+                        }}
+                    >
+                        {message.text}
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            <div style={{ padding: '20px', flex: 1 }}>
+
+                {/* Employee Selector */}
+                <Card style={{ marginBottom: '20px', padding: '16px' }}>
+                    <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', color: '#718096', marginBottom: '8px', textTransform: 'uppercase' }}>
+                        Mitarbeiter
+                    </label>
+                    <select
+                        style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '16px' }}
+                        onChange={(e) => {
+                            const emp = employees.find(em => em.id === e.target.value);
+                            setSelectedEmployee(emp);
+                        }}
+                        value={selectedEmployee?.id || ''}
+                    >
+                        <option value="">-- Bitte wählen --</option>
+                        {employees.map(emp => (
+                            <option key={emp.id} value={emp.id}>{emp.name}</option>
+                        ))}
+                    </select>
+                </Card>
+
+                {selectedEmployee && (
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                        {/* Tabs */}
+                        <div style={{ display: 'flex', background: 'white', borderRadius: '12px', padding: '4px', marginBottom: '20px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
+                            <button
+                                onClick={() => setActiveTab('today')}
+                                style={{
+                                    flex: 1,
+                                    padding: '10px',
+                                    borderRadius: '8px',
+                                    background: activeTab === 'today' ? '#667eea' : 'transparent',
+                                    color: activeTab === 'today' ? 'white' : '#718096',
+                                    fontWeight: '600',
+                                    transition: 'all 0.2s'
+                                }}
+                            >
+                                📝 Heute
+                            </button>
+                            <button
+                                onClick={() => setActiveTab('history')}
+                                style={{
+                                    flex: 1,
+                                    padding: '10px',
+                                    borderRadius: '8px',
+                                    background: activeTab === 'history' ? '#667eea' : 'transparent',
+                                    color: activeTab === 'history' ? 'white' : '#718096',
+                                    fontWeight: '600',
+                                    transition: 'all 0.2s'
+                                }}
+                            >
+                                📋 Verlauf
+                            </button>
+                        </div>
+
+                        {/* Content */}
+                        {activeTab === 'today' ? (
+                            <motion.div
+                                key="today"
+                                initial={{ opacity: 0, x: -20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ duration: 0.2 }}
+                            >
+                                <Card>
+                                    <h2 style={{ textAlign: 'center', marginBottom: '20px', color: '#2d3748' }}>
+                                        {format(parseISO(workDate), 'EEEE, d. MMMM', { locale: de })}
+                                    </h2>
+
+                                    <div style={{ marginBottom: '20px' }}>
+                                        <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', color: '#718096', marginBottom: '8px' }}>DATUM</label>
+                                        <input
+                                            type="date"
+                                            value={workDate}
+                                            onChange={(e) => setWorkDate(e.target.value)}
+                                            style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0' }}
+                                        />
+                                    </div>
+
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '24px' }}>
+                                        <div>
+                                            <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', color: '#718096', marginBottom: '8px' }}>START</label>
+                                            <input
+                                                type="time"
+                                                value={timeEntry.start_time}
+                                                onChange={(e) => setTimeEntry({ ...timeEntry, start_time: e.target.value })}
+                                                style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '18px', textAlign: 'center' }}
+                                            />
+                                            <Button variant="success" onClick={() => setNow('start_time')} style={{ width: '100%', marginTop: '8px', fontSize: '12px', padding: '8px' }}>
+                                                Jetzt
+                                            </Button>
+                                        </div>
+                                        <div>
+                                            <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', color: '#718096', marginBottom: '8px' }}>ENDE</label>
+                                            <input
+                                                type="time"
+                                                value={timeEntry.end_time}
+                                                onChange={(e) => setTimeEntry({ ...timeEntry, end_time: e.target.value })}
+                                                style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '18px', textAlign: 'center' }}
+                                            />
+                                            <Button variant="danger" onClick={() => setNow('end_time')} style={{ width: '100%', marginTop: '8px', fontSize: '12px', padding: '8px' }}>
+                                                Jetzt
+                                            </Button>
+                                        </div>
+                                    </div>
+
+                                    <Button onClick={handleSave} style={{ width: '100%', padding: '16px', fontSize: '16px' }}>
+                                        Speichern
+                                    </Button>
+                                </Card>
+                            </motion.div>
+                        ) : (
+                            <motion.div
+                                key="history"
+                                initial={{ opacity: 0, x: 20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ duration: 0.2 }}
+                            >
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', padding: '0 8px' }}>
+                                    <button onClick={() => setCurrentMonth(subMonths(currentMonth, 1))} style={{ background: 'none', border: 'none', fontSize: '20px', cursor: 'pointer' }}>◀️</button>
+                                    <span style={{ fontWeight: 'bold', fontSize: '16px' }}>{format(currentMonth, 'MMMM yyyy', { locale: de })}</span>
+                                    <button onClick={() => setCurrentMonth(addMonths(currentMonth, 1))} style={{ background: 'none', border: 'none', fontSize: '20px', cursor: 'pointer' }}>▶️</button>
+                                </div>
+
+                                <div style={{ display: 'grid', gap: '10px' }}>
+                                    {history.length > 0 ? (
+                                        history.map((entry) => (
+                                            <Card key={entry.date}
+                                                style={{ padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}
+                                                onClick={() => {
+                                                    setWorkDate(entry.date);
+                                                    setActiveTab('today');
+                                                }}
+                                            >
+                                                <div>
+                                                    <div style={{ fontWeight: 'bold', color: '#2d3748' }}>
+                                                        {format(parseISO(entry.date), 'dd.MM.', { locale: de })} <span style={{ fontWeight: 'normal', color: '#718096', fontSize: '14px' }}>{format(parseISO(entry.date), 'EEEE', { locale: de })}</span>
+                                                    </div>
+                                                </div>
+                                                <div style={{ textAlign: 'right' }}>
+                                                    <div style={{ fontWeight: 'bold', color: '#667eea' }}>{(entry.hours || 0).toFixed(2)} h</div>
+                                                    <div style={{ fontSize: '12px', color: '#cbd5e0' }}>{entry.start_time} - {entry.end_time}</div>
+                                                </div>
+                                            </Card>
+                                        ))
+                                    ) : (
+                                        <div style={{ textAlign: 'center', padding: '40px', color: '#a0aec0' }}>Keine Einträge</div>
+                                    )}
+                                </div>
+                            </motion.div>
+                        )}
+                    </motion.div>
+                )}
+            </div>
+        </div>
+    );
+};
+
+export default EmployeeView;

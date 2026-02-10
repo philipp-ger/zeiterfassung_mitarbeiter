@@ -54,7 +54,8 @@ Die Sortierung wird über ein Dropdown-Menü neben der Monatsnavigation gesteuer
 
 - **Backend:** Node.js + Express.js
 - **Datenbank:** SQLite (lokal, persistent)
-- **Frontend:** HTML5 + CSS3 + Vanilla JavaScript (no frameworks)
+- **Frontend:** React + Vite (Modern, Single Page Application)
+- **Styling:** CSS Modules / Styled Components via React
 - **APIs:** RESTful Endpoints mit JSON
 
 ## 📦 Installation & Start
@@ -62,22 +63,43 @@ Die Sortierung wird über ein Dropdown-Menü neben der Monatsnavigation gesteuer
 ### Voraussetzungen
 - Node.js 14+ installiert
 - Terminal/CMD Zugriff
-- Port 3000 verfügbar
 
 ### Installation
+1. Repository klonen/herunterladen
+2. Dependencies installieren (Root & Client):
 ```bash
-cd /data/.openclaw/workspace/fit-inn-app
+# Backend Dependencies
 npm install
+
+# Frontend Dependencies
+cd client
+npm install
+cd ..
 ```
 
 ### App starten
+Um die App vollständig (Backend + Frontend) zu starten:
+
+1. **Backend starten:**
 ```bash
-npm start
+node src/server.js
 ```
+Läuft auf: http://localhost:3000
 
-**App läuft dann auf:** http://localhost:3000
+2. **Frontend starten (in neuem Terminal):**
+```bash
+cd client
+npm run dev
+```
+Läuft auf: http://localhost:5173
 
-**Im Studio-Netzwerk:** http://<DEINE-PC-IP>:3000/time
+**Hinweis:** Das Frontend (Port 5173) leitet API-Anfragen automatisch an das Backend (Port 3000) weiter.
+
+### Im Studio-Netzwerk Nutzung
+Um die App im Netzwerk verfügbar zu machen:
+1. Backend starten: `node src/server.js`
+2. Frontend mit Host-Flag starten: `cd client && npm run dev -- --host`
+3. Die angezeigte Network-URL (z.B. `http://192.168.x.x:5173`) auf den Geräten öffnen.
 
 ## 📱 Erste Schritte
 
