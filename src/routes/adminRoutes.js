@@ -167,14 +167,17 @@ function calculateReport(rows, year, month) {
             const hours = Math.max(0, (end - start) / (1000 * 60 * 60));
 
             if (!report[row.id].days[row.date]) {
-                report[row.id].days[row.date] = [];
+                report[row.id].days[row.date] = {
+                    hours: 0,
+                    start_time: row.start_time,
+                    end_time: row.end_time
+                };
             }
 
-            report[row.id].days[row.date].push({
-                hours: hours,
-                start_time: row.start_time,
-                end_time: row.end_time
-            });
+            report[row.id].days[row.date].hours += hours;
+            // Update end_time to the latest one seen for this day
+            report[row.id].days[row.date].end_time = row.end_time;
+
             report[row.id].totalHours += hours;
         }
     });
