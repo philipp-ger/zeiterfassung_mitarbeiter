@@ -103,15 +103,9 @@ Damit Mitarbeiter von ihren Handys zugreifen können:
 ## 🗂 Projektstruktur
 
 ```text
-zeiterfassung_mitarbeiter/
+InnTime/
 ├── src/                  # Backend Quellcode
-│   ├── db/               # Datenbank-Initialisierung & Schema
-│   ├── routes/           # API-Endpunkte (Admin, Employee)
-│   └── server.js         # Express-Server Konfiguration
 ├── client/               # Frontend (React App)
-│   ├── src/              # React Komponenten & Seiten
-│   ├── public/           # Statische Assets
-│   └── package.json      # Frontend Abhängigkeiten
 ├── data/                 # Speicherort der SQLite Datenbank
 ├── README.md             # Diese Dokumentation
 └── package.json          # Root/Backend Abhängigkeiten
