@@ -57,8 +57,8 @@ Stelle sicher, dass [Node.js](https://nodejs.org/) (Version 16 oder höher) inst
 
 ### 2. Repository klonen
 ```bash
-git clone https://github.com/philipp-ger/zeiterfassung_mitarbeiter.git
-cd zeiterfassung_mitarbeiter
+git clone https://github.com/philipp-ger/InnTime.git
+cd InnTime
 ```
 
 ### 3. Abhängigkeiten installieren
