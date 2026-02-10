@@ -42,7 +42,7 @@ const AdminLogin = () => {
             <Card style={{ width: '100%', maxWidth: '400px' }}>
                 <div style={{ textAlign: 'center', marginBottom: '32px' }}>
                     <div style={{ fontSize: '48px', marginBottom: '16px' }}>🔐</div>
-                    <h1 style={{ fontSize: '24px', fontWeight: 'bold', color: '#2d3748' }}>Admin Login</h1>
+                    <h1 style={{ fontSize: '24px', fontWeight: 'bold', color: '#2d3748' }}>InnTime Admin</h1>
                     <p style={{ color: '#718096' }}>Fit-Inn Heldenbergen</p>
                 </div>
 

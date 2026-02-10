@@ -126,7 +126,7 @@ const EmployeeView = () => {
                 boxShadow: '0 4px 15px rgba(0,0,0,0.1)'
             }}>
                 <div style={{ fontSize: '32px', marginBottom: '8px' }}>⏱️</div>
-                <h1 style={{ fontSize: '20px', fontWeight: 'bold' }}>Fit-Inn Zeiterfassung</h1>
+                <h1 style={{ fontSize: '20px', fontWeight: 'bold' }}>InnTime</h1>
                 <div style={{ opacity: 0.8, fontSize: '13px' }}>Heldenbergen</div>
             </div>
 

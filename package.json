@@ -1,5 +1,5 @@
 {
-  "name": "fit-inn-timetracking",
+  "name": "inntime-timetracking",
   "version": "1.0.0",
   "description": "Zeiterfassungs-App für Fit-Inn Heldenbergen",
   "main": "src/server.js",

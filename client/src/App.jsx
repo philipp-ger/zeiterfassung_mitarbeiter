@@ -7,7 +7,7 @@ import AdminLogin from './pages/AdminLogin'
 // Placeholder for now
 const Home = () => (
     <div style={{ padding: '20px', textAlign: 'center', fontFamily: 'sans-serif' }}>
-        <h1>Fit-Inn Zeiterfassung</h1>
+        <h1>InnTime</h1>
         <div style={{ display: 'flex', gap: '20px', justifyContent: 'center', marginTop: '40px' }}>
             <a href="/time" style={{ padding: '15px 30px', background: '#667eea', color: 'white', borderRadius: '10px', textDecoration: 'none' }}>
                 Mitarbeiter-Login

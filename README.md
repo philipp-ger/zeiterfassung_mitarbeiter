@@ -1,4 +1,4 @@
-# 🏋️ Fit-Inn Zeiterfassung v2.0
+# 🏋️ InnTime v3.0
 
 Eine moderne, mobile-optimierte Full-Stack Anwendung zur Zeiterfassung für Fitnessstudios. Entwickelt für **Fit-Inn Heldenbergen**, optimiert für Smartphones, Tablets und Desktop.
 

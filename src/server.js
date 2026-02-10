@@ -41,7 +41,7 @@ app.get('/admin/dashboard', (req, res) => {
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`
 ╔════════════════════════════════════════════════╗
-║     Fit-Inn Zeiterfassung läuft auf Port ${PORT}      ║
+║          InnTime läuft auf Port ${PORT}           ║
 ║  http://0.0.0.0:${PORT}                         ║
 ║                                                ║
 ║  API Modularisiert & Optimiert                 ║
